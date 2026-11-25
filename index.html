@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>2026-510</title>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<base target="_blank">
+<link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
+<style type="text/css">
+#popup, #header, #layerpanel {
+  left: 36px;
+}
+</style>
+<script src="./threejs/three.min.js"></script>
+<script src="./threejs/OrbitControls.js"></script>
+<script src="./threejs/ViewHelper.js"></script>
+<script src="./Qgis2threejs.js"></script>
+
+    <style>
+        /* 1. Das Firmenlogo OBEN RECHTS */
+        #company_logo {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1000; 
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: none; 
+        }
+        
+        #company_logo img {
+            height: 100px;
+            width: auto;
+            display: block;
+        }
+
+        /* 2. Der Info-Kasten UNTEN RECHTS */
+        #project_footer {
+            position: absolute;
+            bottom: 30px;
+            right: 15px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 13px;
+            line-height: 1.4em;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            
+            border-right: 5px solid #E30613;
+            text-align: right;
+            
+            max-width: 300px;
+        }
+
+        #project_footer h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #000;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        #project_footer a {
+            color: #E30613;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        /* Handy-Optimierung */
+        @media (max-width: 600px) {
+            #project_footer { display: none; } 
+            #company_logo { top: 5px; right: 5px; }
+            #company_logo img { height: 40px; }
+        }
+
+		/* Style für die Buttons */
+        .footer-btn {
+            display: inline-block;
+            background-color: #E30613; /* Firmenrot */
+            color: white !important;
+            padding: 8px 15px;
+            margin-top: 10px;
+            margin-left: 5px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .footer-btn:hover {
+            background-color: #b00000;
+        }
+        /* Extra Style für den Karten-Button (optional, z.B. dunkelgrau zur Unterscheidung) */
+        .map-btn {
+            background-color: #333;
+        }
+        .map-btn:hover {
+            background-color: #000;
+        }
+    </style>
+	
+</head>
+<body>
+<div id="view">
+  <div id="northarrow"></div>
+  <div id="navigation"></div>
+</div>
+
+	</div>
+	
+	    <div id="company_logo">
+        <img src="logo.png" alt="Vermessung Diering">
+    </div>
+    <div id="project_footer">
+        <h3> 2026-510 </h3>
+		<h3> Energiezentrale<h3>
+		<h3> Quartier G.-Richter-Straße / FFO<h3>
+        <b>Daten erhoben und bereitgestellt von:</b><br><br>
+        Dipl. Ing. Frank Diering<br>
+        Vermessungsingenieur<br>
+        Lindenstraße 28<br>
+        15230 Frankfurt (Oder)<br><br>
+        Tel.: +49 (0) 335 54 98 65<br>
+        E-Mail: <a href="mailto:vermessung@frankdiering.de">vermessung@frankdiering.de</a><br>
+        Web: <a href="http://www.frankdiering.de" target="_blank">www.frankdiering.de</a>
+        
+        <br><br>
+        <div style="text-align: right;">
+            <a href="downloads.html" target="_blank" class="footer-btn">📥 Downloads</a>
+        </div>
+    </div>
+
+<!-- popup -->
+<div id="popup">
+  <div id="closebtn">&times;</div>
+  <div id="popupbar"></div>
+  <div id="popupbody">
+    <div id="popupcontent"></div>
+
+    <!-- query result -->
+    <div id="queryresult">
+      <table id="qr_coords_table">
+        <caption>Clicked coordinates <div id="zoomtopoint" class="action-zoom zoombtn"></div></caption>
+        <tr><td id="qr_coords"></td></tr>
+      </table>
+
+      <table id="qr_layername_table">
+        <caption>Layer <div id="zoomtolayer" class="action-zoom zoombtn"></div></caption>
+        <tr><td id="qr_layername"></td></tr>
+      </table>
+
+      <table id="qr_attrs_table">
+        <caption>Attributes</caption>
+      </table>
+
+      <!-- camera actions and measure tool -->
+      <div id="orbitbtn" class="action-btn action-orbit">Orbit</div>
+      <div id="measurebtn" class="action-btn">Measure distance</div>
+    </div>
+
+    <!-- page info -->
+    <div id="pageinfo">
+      <h1>Current View URL</h1>
+      <div><input id="urlbox" type="text"></div>
+
+      <h1>Usage</h1>
+      <table id="usage">
+        <tr><td colspan="2" class="star">Mouse</td></tr>
+        <tr><td>Left button + Move</td><td>Orbit</td></tr>
+        <tr><td>Mouse Wheel</td><td>Zoom</td></tr>
+        <tr><td>Right button + Move</td><td>Pan</td></tr>
+
+        <tr><td colspan="2" class="star">Keys</td></tr>
+        <tr><td>Arrow keys</td><td>Move Horizontally</td></tr>
+        <tr><td>Shift + Arrow keys</td><td>Orbit</td></tr>
+        <tr><td>Ctrl + Arrow keys</td><td>Rotate</td></tr>
+        <tr><td>Shift + Ctrl + Up / Down</td><td>Zoom In / Out</td></tr>
+        <tr><td>L</td><td>Toggle Label Visibility</td></tr>
+        <tr><td>R</td><td>Start / Stop Orbit Animation</td></tr>
+        <tr><td>W</td><td>Wireframe Mode</td></tr>
+        <tr><td>Shift + R</td><td>Reset Camera Position</td></tr>
+        <tr><td>Shift + S</td><td>Save Image</td></tr>
+      </table>
+
+      <h1>About</h1>
+      <div id="about"><img src="./Qgis2threejs.png">
+        This page was made with <a href="https://www.qgis.org/">QGIS</a> and <a href="https://github.com/minorua/Qgis2threejs">Qgis2threejs</a> plugin (version 2.8).
+        <div>Powered by <a href="https://threejs.org/">three.js</a>
+        <span id="lib_proj4js"> and <a href="https://trac.osgeo.org/proj4js/">Proj4js</a></span>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- progress bar -->
+<div id="progress"><div id="progressbar"></div></div>
+
+<!-- menu -->
+<div id="toolbtns">
+  <div id="layerbtn"></div>
+  <div id="animbtn" class="hidden"></div>
+  <div id="infobtn"></div>
+</div>
+
+<!-- header and footer -->
+<div id="header"></div>
+<div id="footer"></div>
+
+<!-- layer panel -->
+<div id="layerpanel">
+  <div id="layerlist"></div>
+</div>
+
+<!-- animation -->
+<div id="narrativebox" class="ef1">
+  <div id="narbody">
+
+  </div>
+  <div id="nextbtn"></div>
+</div>
+
+<script>
+Q3D.Config.allVisible = true;
+Q3D.Config.localMode = true;
+
+var container = document.getElementById("view"),
+    app = Q3D.application,
+    gui = Q3D.gui;
+
+app.init(container);       // initialize viewer
+
+// load the scene
+app.loadSceneFile("./data/index/scene.js", function (scene) {
+  // scene file has been loaded
+  app.start();
+}, function (scene) {
+  // all relevant files have been loaded
+
+});
+</script>
+</body>
+</html>
